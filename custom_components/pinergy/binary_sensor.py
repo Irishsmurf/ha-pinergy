@@ -57,8 +57,7 @@ async def async_setup_entry(
     """Set up Pinergy binary sensors from a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        PinergyBinarySensor(coordinator, description)
-        for description in BINARY_SENSORS
+        PinergyBinarySensor(coordinator, description) for description in BINARY_SENSORS
     )
 
 

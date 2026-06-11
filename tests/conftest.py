@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -66,9 +66,9 @@ def build_balance_response() -> BalanceResponse:
         emergency_credit=False,
         power_off=False,
         last_top_up_ts=1765800000,
-        last_top_up_time=datetime.fromtimestamp(1765800000, tz=timezone.utc),
+        last_top_up_time=datetime.fromtimestamp(1765800000, tz=UTC),
         last_reading_ts=1765886400,
-        last_reading=datetime.fromtimestamp(1765886400, tz=timezone.utc),
+        last_reading=datetime.fromtimestamp(1765886400, tz=UTC),
     )
 
 
@@ -80,7 +80,7 @@ def build_usage_response() -> UsageResponse:
         kwh=8.76,
         co2=0.0,
         date_ts=1765843200,
-        date=datetime.fromtimestamp(1765843200, tz=timezone.utc),
+        date=datetime.fromtimestamp(1765843200, tz=UTC),
     )
     return UsageResponse(day=[today], week=[], month=[])
 

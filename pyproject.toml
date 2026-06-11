@@ -8,3 +8,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+# Match Home Assistant core convention: homeassistant after third-party libs.
+known-first-party = ["homeassistant"]

@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, MagicMock
 from pypinergy import PinergyAuthError, PinergyHTTPError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.pinergy.const import DOMAIN
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from custom_components.pinergy.const import DOMAIN
 
 TEST_EMAIL = "user@example.com"
 TEST_PASSWORD = "super-secret"
