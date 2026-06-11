@@ -25,6 +25,17 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def _is_token_error(err: PinergyAPIError) -> bool:
+    """Return True if an application-level error means the token was rejected.
+
+    The Pinergy API reports an expired session as HTTP 200 with
+    ``success: false`` and a message like "Auth_token is not correct.", which
+    pypinergy raises as PinergyAPIError rather than PinergyAuthError.
+    """
+    message = str(err).lower()
+    return "auth_token" in message or "auth token" in message
+
+
 @dataclass
 class PinergyData:
     """Container for the data fetched from the Pinergy API on each refresh."""
@@ -73,24 +84,38 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
             usage=self.client.get_usage(),
         )
 
+    def _relogin_and_fetch(self) -> PinergyData:
+        """Re-authenticate and fetch again (runs in the executor).
+
+        Calls login() rather than logout(): pypinergy's logout() discards the
+        stored credentials, which would make any later login impossible.
+        """
+        self.client.login()
+        return self._fetch()
+
     async def _async_update_data(self) -> PinergyData:
         """Fetch the latest data from the Pinergy API."""
         try:
             return await self.hass.async_add_executor_job(self._fetch)
-        except PinergyAuthError:
-            # The session token likely expired; clear it so the client logs in
-            # again lazily, and retry once before asking the user to reauth.
-            _LOGGER.debug("Auth token rejected, retrying with a fresh login")
-            self.client.logout()
-            try:
-                return await self.hass.async_add_executor_job(self._fetch)
-            except PinergyAuthError as err:
-                raise ConfigEntryAuthFailed(f"Invalid credentials: {err}") from err
-            except (PinergyAPIError, PinergyHTTPError) as err:
+        except (PinergyAuthError, PinergyAPIError) as err:
+            if isinstance(err, PinergyAPIError) and not _is_token_error(err):
                 raise UpdateFailed(
                     f"Error communicating with the Pinergy API: {err}"
                 ) from err
-        except (PinergyAPIError, PinergyHTTPError) as err:
+            # The session token expired; refresh it with the stored
+            # credentials and retry once before asking the user to reauth.
+            _LOGGER.debug("Auth token rejected (%s), retrying with a fresh login", err)
+            try:
+                return await self.hass.async_add_executor_job(self._relogin_and_fetch)
+            except PinergyAuthError as relogin_err:
+                raise ConfigEntryAuthFailed(
+                    f"Invalid credentials: {relogin_err}"
+                ) from relogin_err
+            except (PinergyAPIError, PinergyHTTPError) as relogin_err:
+                raise UpdateFailed(
+                    f"Error communicating with the Pinergy API: {relogin_err}"
+                ) from relogin_err
+        except PinergyHTTPError as err:
             raise UpdateFailed(
                 f"Error communicating with the Pinergy API: {err}"
             ) from err

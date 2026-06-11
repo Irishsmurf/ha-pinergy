@@ -13,7 +13,7 @@ Home Assistant custom integration (HACS) for Pinergy, an Irish prepay energy pro
 
 - Monetary sensors use `state_class: total` — HA forbids `measurement`/`total_increasing` with `device_class: monetary`.
 - The `power` binary sensor is inverted relative to the API: `is_on = not balance.power_off` (on = supply connected), matching POWER device-class semantics.
-- On `PinergyAuthError` during refresh, the coordinator logs out and retries once (token expiry self-heals) before raising `ConfigEntryAuthFailed`.
+- Token expiry surfaces in two forms: `PinergyAuthError` (HTTP 401) or `PinergyAPIError` whose message mentions the auth token (the API reports expiry as HTTP 200 `success: false` with "Auth_token is not correct."). On either, the coordinator re-logins via `client.login()` and retries once (token expiry self-heals) before raising `ConfigEntryAuthFailed`. Never use `client.logout()` to force a re-login — pypinergy's `logout()` discards the stored credentials, making any later `login()` fail.
 
 ## Gotchas
 

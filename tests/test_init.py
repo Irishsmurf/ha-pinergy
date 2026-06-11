@@ -4,14 +4,21 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from pypinergy import PinergyAuthError, PinergyHTTPError
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+import pytest
+from freezegun.api import FrozenDateTimeFactory
+from pypinergy import PinergyAPIError, PinergyAuthError, PinergyHTTPError
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
-from custom_components.pinergy.const import DOMAIN
+from custom_components.pinergy.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from .conftest import build_balance_response
 
 TEST_USER_INPUT = {
     CONF_EMAIL: "user@example.com",
@@ -106,3 +113,88 @@ async def test_setup_connection_error_retries(
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "token_error",
+    [
+        PinergyAuthError("Auth token rejected (401)"),
+        PinergyAPIError("Auth_token is not correct."),
+    ],
+)
+async def test_refresh_relogins_on_expired_token(
+    hass: HomeAssistant,
+    mock_pinergy_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    token_error: Exception,
+) -> None:
+    """Test that a rejected token during refresh self-heals via re-login."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_pinergy_client.login.call_count == 1
+
+    mock_pinergy_client.get_balance.side_effect = [
+        token_error,
+        build_balance_response(),
+    ]
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pinergy_client.login.call_count == 2
+    mock_pinergy_client.logout.assert_not_called()
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.pinergy_account_current_balance").state == "23.45"
+
+
+async def test_refresh_relogin_failure_starts_reauth(
+    hass: HomeAssistant,
+    mock_pinergy_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a failed re-login after token expiry triggers a reauth flow."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_pinergy_client.get_balance.side_effect = PinergyAPIError(
+        "Auth_token is not correct."
+    )
+    mock_pinergy_client.login.side_effect = PinergyAuthError("Login failed")
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_refresh_non_auth_api_error_does_not_relogin(
+    hass: HomeAssistant,
+    mock_pinergy_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an unrelated API error fails the update without re-login."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_pinergy_client.get_balance.side_effect = PinergyAPIError("Server error")
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pinergy_client.login.call_count == 1
+    state = hass.states.get("sensor.pinergy_account_current_balance")
+    assert state.state == "unavailable"
