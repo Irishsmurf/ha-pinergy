@@ -1,4 +1,4 @@
-# Pinergy for Home Assistant
+# <img src="assets/brand/icon.png" alt="Pinergy" width="28"> Pinergy for Home Assistant
 
 A custom [Home Assistant](https://www.home-assistant.io/) integration for [Pinergy](https://www.pinergy.ie/), the Irish prepay energy provider. It polls the Pinergy smart-meter API (via [pypinergy](https://pypi.org/project/pypinergy/)) every 30 minutes and exposes your credit balance, usage, and meter status as entities.
 
