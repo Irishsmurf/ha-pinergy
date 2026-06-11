@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Pinergy",
+        "description": "Enter the credentials for your Pinergy account.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "The email address you use to sign in to the Pinergy app.",
+          "password": "Your Pinergy account password."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Pinergy",
+        "description": "The password for {email} is no longer valid. Enter your current password.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email address or password",
+      "cannot_connect": "Failed to connect to the Pinergy API",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This Pinergy account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "unique_id_mismatch": "These credentials belong to a different Pinergy account"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_balance": {
+        "name": "Current balance"
+      },
+      "days_remaining": {
+        "name": "Days remaining"
+      },
+      "last_top_up_amount": {
+        "name": "Last top-up amount"
+      },
+      "today_usage": {
+        "name": "Today's usage"
+      },
+      "today_cost": {
+        "name": "Today's cost"
+      }
+    },
+    "binary_sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "emergency_credit": {
+        "name": "Emergency credit"
+      },
+      "credit_low": {
+        "name": "Credit low"
+      }
+    }
+  }
+}
