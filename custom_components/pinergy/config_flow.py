@@ -66,9 +66,9 @@ class PinergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> PinergyOptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry):
         """Get the options flow for this handler."""
-        return PinergyOptionsFlow(config_entry)
+        return PinergyOptionsFlow()
 
     async def _async_validate_credentials(
         self, email: str, password: str
@@ -142,10 +142,6 @@ class PinergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class PinergyOptionsFlow(OptionsFlow):
     """Handle options flow for Pinergy."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
