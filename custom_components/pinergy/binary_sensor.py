@@ -49,6 +49,11 @@ BINARY_SENSORS: tuple[PinergyBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda data: data.balance.credit_low,
     ),
+    PinergyBinarySensorEntityDescription(
+        key="pending_top_up",
+        translation_key="pending_top_up",
+        is_on_fn=lambda data: data.balance.pending_top_up,
+    ),
 )
 
 

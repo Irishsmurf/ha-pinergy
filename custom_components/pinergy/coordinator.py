@@ -7,10 +7,12 @@ from dataclasses import dataclass
 
 from pypinergy import (
     BalanceResponse,
+    CompareResponse,
     LoginResponse,
     PinergyAPIError,
     PinergyAuthError,
     PinergyClient,
+    PinergyError,
     PinergyHTTPError,
     PinergyTimeoutError,
     UsageResponse,
@@ -43,6 +45,7 @@ class PinergyData:
 
     balance: BalanceResponse
     usage: UsageResponse
+    compare: CompareResponse | None
 
 
 class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
@@ -81,11 +84,18 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
             raise UpdateFailed(f"Error connecting to the Pinergy API: {err}") from err
 
     def _fetch(self) -> PinergyData:
-        """Fetch balance and usage synchronously (runs in the executor)."""
-        return PinergyData(
-            balance=self.client.get_balance(),
-            usage=self.client.get_usage(),
-        )
+        """Fetch balance, usage, and comparison synchronously (in the executor)."""
+        balance = self.client.get_balance()
+        usage = self.client.get_usage()
+        # The compare endpoint is a non-essential insight that may not exist
+        # for every account type (legacy/no-WAN/level-pay meters); never let
+        # it break the balance refresh.
+        compare: CompareResponse | None = None
+        try:
+            compare = self.client.compare_usage()
+        except PinergyError as err:
+            _LOGGER.debug("Usage comparison unavailable: %s", err)
+        return PinergyData(balance=balance, usage=usage, compare=compare)
 
     def _relogin_and_fetch(self) -> PinergyData:
         """Re-authenticate and fetch again (runs in the executor).

@@ -3,6 +3,17 @@
     "sensor": {
       "days_remaining": {
         "default": "mdi:calendar-clock"
+      },
+      "average_home_usage": {
+        "default": "mdi:home-group"
+      },
+      "average_home_cost": {
+        "default": "mdi:home-group"
+      }
+    },
+    "binary_sensor": {
+      "pending_top_up": {
+        "default": "mdi:cash-clock"
       }
     }
   }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import build_balance_response, build_usage_response
 
@@ -67,6 +69,14 @@ async def test_setup_creates_device_and_entities(
     assert hass.states.get("sensor.pinergy_account_last_top_up_amount").state == "20.0"
     assert hass.states.get("sensor.pinergy_account_today_s_usage").state == "8.76"
     assert hass.states.get("sensor.pinergy_account_today_s_cost").state == "2.34"
+    assert hass.states.get("sensor.pinergy_account_this_week_s_usage").state == "54.3"
+    assert hass.states.get("sensor.pinergy_account_this_week_s_cost").state == "15.67"
+    assert hass.states.get("sensor.pinergy_account_this_month_s_usage").state == "210.4"
+    assert hass.states.get("sensor.pinergy_account_this_month_s_cost").state == "60.12"
+    assert (
+        hass.states.get("sensor.pinergy_account_last_meter_reading").state
+        == datetime.fromtimestamp(1765886400, tz=UTC).isoformat()
+    )
 
     # Power is on (supply connected); alert flags are off.
     assert hass.states.get("binary_sensor.pinergy_account_power").state == STATE_ON
@@ -77,6 +87,24 @@ async def test_setup_creates_device_and_entities(
     assert (
         hass.states.get("binary_sensor.pinergy_account_credit_low").state == STATE_OFF
     )
+    assert (
+        hass.states.get("binary_sensor.pinergy_account_pending_top_up").state
+        == STATE_OFF
+    )
+
+    # The extras ship disabled; users opt in from the device page.
+    entity_registry = er.async_get(hass)
+    for unique_id in (
+        "PN123456_last_top_up",
+        "PN123456_average_home_usage",
+        "PN123456_average_home_cost",
+    ):
+        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        assert (
+            entity_registry.async_get(entity_id).disabled_by
+            is er.RegistryEntryDisabler.INTEGRATION
+        )
 
 
 async def test_unload_entry(
@@ -242,3 +270,54 @@ async def test_today_sensors_unavailable_without_meter_data(
     )
     # Balance-backed sensors are unaffected.
     assert hass.states.get("sensor.pinergy_account_current_balance").state == "23.45"
+
+
+def _enable_compare_sensors(hass: HomeAssistant) -> None:
+    """Pre-register the disabled-by-default compare sensors as enabled."""
+    entity_registry = er.async_get(hass)
+    for key in ("average_home_usage", "average_home_cost"):
+        entity_registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            f"PN123456_{key}",
+            suggested_object_id=f"pinergy_account_{key}",
+        )
+
+
+async def test_compare_sensors_report_average_home(
+    hass: HomeAssistant, mock_pinergy_client: MagicMock
+) -> None:
+    """Test that the enabled compare sensors expose the average-home values."""
+    _enable_compare_sensors(hass)
+
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.pinergy_account_average_home_usage").state == "11.5"
+    assert hass.states.get("sensor.pinergy_account_average_home_cost").state == "3.45"
+
+
+async def test_compare_endpoint_failure_is_tolerated(
+    hass: HomeAssistant, mock_pinergy_client: MagicMock
+) -> None:
+    """Test that a failing compare endpoint never breaks the refresh."""
+    mock_pinergy_client.compare_usage.side_effect = PinergyAPIError(
+        "Comparison not available"
+    )
+    _enable_compare_sensors(hass)
+
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.pinergy_account_current_balance").state == "23.45"
+    assert (
+        hass.states.get("sensor.pinergy_account_average_home_usage").state
+        == STATE_UNAVAILABLE
+    )

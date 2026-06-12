@@ -48,6 +48,30 @@
       },
       "today_cost": {
         "name": "Today's cost"
+      },
+      "week_usage": {
+        "name": "This week's usage"
+      },
+      "week_cost": {
+        "name": "This week's cost"
+      },
+      "month_usage": {
+        "name": "This month's usage"
+      },
+      "month_cost": {
+        "name": "This month's cost"
+      },
+      "last_reading": {
+        "name": "Last meter reading"
+      },
+      "last_top_up": {
+        "name": "Last top-up"
+      },
+      "average_home_usage": {
+        "name": "Average home usage today"
+      },
+      "average_home_cost": {
+        "name": "Average home cost today"
       }
     },
     "binary_sensor": {
@@ -59,6 +83,9 @@
       },
       "credit_low": {
         "name": "Credit low"
+      },
+      "pending_top_up": {
+        "name": "Pending top-up"
       }
     }
   }
