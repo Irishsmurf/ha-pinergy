@@ -15,6 +15,16 @@ All entities belong to a single **Pinergy Account** device.
 | Last top-up amount | Amount of the most recent top-up | € |
 | Today's usage | Energy consumed so far today | kWh |
 | Today's cost | Cost of today's usage | € |
+| This week's usage | Energy consumed so far this week | kWh |
+| This week's cost | Cost of this week's usage | € |
+| This month's usage | Energy consumed so far this month | kWh |
+| This month's cost | Cost of this month's usage | € |
+| Last meter reading | When the meter last reported | timestamp |
+| Last top-up | When the most recent top-up was made (disabled by default) | timestamp |
+| Average home usage today | What a similar home used today (disabled by default) | kWh |
+| Average home cost today | What a similar home spent today (disabled by default) | € |
+
+Entities marked *disabled by default* can be enabled from the Pinergy Account device page.
 
 ### Binary sensors
 
@@ -23,8 +33,17 @@ All entities belong to a single **Pinergy Account** device.
 | Power | Off when the supply has been disconnected |
 | Emergency credit | On when the meter is drawing on emergency credit |
 | Credit low | On when the balance is below your alert threshold |
+| Pending top-up | On while a top-up is waiting to be applied to the meter |
 
-**Today's usage** can be added to the Home Assistant [Energy Dashboard](https://www.home-assistant.io/home-energy-management/) as a grid consumption source.
+## Energy Dashboard
+
+The integration imports your daily usage history into Home Assistant's long-term statistics on every refresh, so the [Energy Dashboard](https://www.home-assistant.io/home-energy-management/) stays accurate even across Home Assistant downtime.
+
+1. Go to **Settings → Dashboards → Energy**.
+2. Under **Electricity grid → Add consumption**, select the **Pinergy energy consumption** statistic.
+3. For cost tracking, choose **Use an entity tracking the total costs** and select **Pinergy energy cost**.
+
+Alternatively, the **Today's usage** and **Today's cost** sensors can be used directly, but the imported statistics are recommended: they backfill the last seven days from the Pinergy API rather than relying on Home Assistant having been online.
 
 ## Installation
 

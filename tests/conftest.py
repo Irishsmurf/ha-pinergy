@@ -18,6 +18,25 @@ from pypinergy import (
     UsageResponse,
     User,
 )
+from pytest_homeassistant_custom_component.typing import RecorderInstanceGenerator
+
+from homeassistant.components.recorder import Recorder
+
+
+@pytest.fixture
+def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Initialize the recorder's database fixtures before hass starts."""
+
+
+@pytest.fixture(autouse=True)
+def auto_recorder(recorder_mock: Recorder) -> None:
+    """Run every test with the in-memory recorder.
+
+    The integration declares a hard dependency on recorder (it feeds the
+    long-term statistics), so setting up the config entry requires it.
+    """
 
 
 @pytest.fixture(autouse=True)

@@ -24,6 +24,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .statistics import async_insert_statistics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +108,18 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
         return self._fetch()
 
     async def _async_update_data(self) -> PinergyData:
+        """Fetch the latest data and feed the long-term statistics."""
+        data = await self._async_fetch_data()
+        try:
+            await async_insert_statistics(
+                self.hass, self.login_response.premises_number, data.usage
+            )
+        except Exception:
+            # A statistics hiccup must never take the entities down.
+            _LOGGER.exception("Error inserting Pinergy long-term statistics")
+        return data
+
+    async def _async_fetch_data(self) -> PinergyData:
         """Fetch the latest data from the Pinergy API."""
         try:
             return await self.hass.async_add_executor_job(self._fetch)
