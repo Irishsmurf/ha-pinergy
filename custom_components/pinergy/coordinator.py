@@ -18,12 +18,19 @@ from pypinergy import (
     UsageResponse,
 )
 
+from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_FETCH_COMPARISONS,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+)
 from .statistics import async_insert_statistics
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +74,11 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=timedelta(
+                minutes=config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+                )
+            ),
         )
         self.client = client
 
@@ -92,10 +103,11 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
         # for every account type (legacy/no-WAN/level-pay meters); never let
         # it break the balance refresh.
         compare: CompareResponse | None = None
-        try:
-            compare = self.client.compare_usage()
-        except PinergyError as err:
-            _LOGGER.debug("Usage comparison unavailable: %s", err)
+        if self.config_entry.options.get(CONF_FETCH_COMPARISONS, True):
+            try:
+                compare = self.client.compare_usage()
+            except PinergyError as err:
+                _LOGGER.debug("Usage comparison unavailable: %s", err)
         return PinergyData(balance=balance, usage=usage, compare=compare)
 
     def _relogin_and_fetch(self) -> PinergyData:

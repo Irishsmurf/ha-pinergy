@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PinergyDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 type PinergyConfigEntry = ConfigEntry[PinergyDataUpdateCoordinator]
 
@@ -25,7 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PinergyConfigEntry) -> b
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: PinergyConfigEntry) -> None:
+    """Reload the config entry when options are updated."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: PinergyConfigEntry) -> bool:

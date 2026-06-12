@@ -32,6 +32,21 @@
       "unique_id_mismatch": "These credentials belong to a different Pinergy account"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pinergy Options",
+        "data": {
+          "scan_interval": "Update interval (minutes)",
+          "fetch_comparisons": "Fetch average home comparisons"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll the Pinergy API for new data.",
+          "fetch_comparisons": "If disabled, the integration will not fetch 'average home' comparison data, reducing API calls."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "current_balance": {
@@ -86,6 +101,28 @@
       },
       "pending_top_up": {
         "name": "Pending top-up"
+      }
+    },
+    "event": {
+      "top_up": {
+        "name": "Top-up",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "top_up_received": "Top-up received"
+            }
+          }
+        }
+      },
+      "meter_reading": {
+        "name": "Meter reading",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_meter_reading": "New meter reading"
+            }
+          }
+        }
       }
     }
   }

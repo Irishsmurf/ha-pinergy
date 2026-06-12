@@ -14,15 +14,24 @@ from pypinergy import (
     PinergyError,
 )
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow, callback
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import (
+    CONF_FETCH_COMPARISONS,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +63,12 @@ class PinergyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Pinergy."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> PinergyOptionsFlow:
+        """Get the options flow for this handler."""
+        return PinergyOptionsFlow(config_entry)
 
     async def _async_validate_credentials(
         self, email: str, password: str
@@ -123,4 +138,45 @@ class PinergyConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             description_placeholders={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             errors=errors,
+        )
+
+class PinergyOptionsFlow(OptionsFlow):
+    """Handle options flow for Pinergy."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=10,
+                            max=1440,
+                            mode=NumberSelectorMode.BOX,
+                            unit_of_measurement="minutes",
+                        )
+                    ),
+                    vol.Required(
+                        CONF_FETCH_COMPARISONS,
+                        default=self.config_entry.options.get(
+                            CONF_FETCH_COMPARISONS, True
+                        ),
+                    ): BooleanSelector(),
+                }
+            ),
         )

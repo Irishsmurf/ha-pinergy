@@ -199,3 +199,34 @@ async def test_reauth_flow_invalid_auth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_PASSWORD] == "new-password"
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_pinergy_client: MagicMock,
+) -> None:
+    """Test the options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="PN123456",
+        data=TEST_USER_INPUT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "scan_interval": 15,
+            "fetch_comparisons": False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {
+        "scan_interval": 15,
+        "fetch_comparisons": False,
+    }

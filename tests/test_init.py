@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
@@ -321,3 +321,23 @@ async def test_compare_endpoint_failure_is_tolerated(
         hass.states.get("sensor.pinergy_account_average_home_usage").state
         == STATE_UNAVAILABLE
     )
+
+async def test_options_reload_entry(
+    hass: HomeAssistant, mock_pinergy_client: MagicMock
+) -> None:
+    """Test that changing options reloads the entry."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Changing options should trigger a reload.
+    with patch(
+        "custom_components.pinergy.async_setup_entry", return_value=True
+    ) as mock_setup:
+        hass.config_entries.async_update_entry(
+            entry, options={"scan_interval": 15, "fetch_comparisons": False}
+        )
+        await hass.async_block_till_done()
+        assert mock_setup.call_count == 1
