@@ -72,10 +72,10 @@ def build_balance_response() -> BalanceResponse:
     )
 
 
-def build_usage_response() -> UsageResponse:
+def build_usage_response(today_available: bool = True) -> UsageResponse:
     """Build a realistic UsageResponse for mocking."""
     today = UsageEntry(
-        available=True,
+        available=today_available,
         amount=2.34,
         kwh=8.76,
         co2=0.0,

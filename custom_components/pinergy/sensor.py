@@ -17,8 +17,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PinergyConfigEntry
-from .coordinator import PinergyData, PinergyDataUpdateCoordinator
+from .coordinator import PinergyData
 from .entity import PinergyEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,20 +28,12 @@ class PinergySensorEntityDescription(SensorEntityDescription):
     """Describes a Pinergy sensor entity."""
 
     value_fn: Callable[[PinergyData], StateType]
+    available_fn: Callable[[PinergyData], bool] | None = None
 
 
-def _today_usage_kwh(data: PinergyData) -> float | None:
-    """Return today's energy use, or None when the meter data is unavailable."""
-    if not data.usage.day or not data.usage.day[0].available:
-        return None
-    return data.usage.day[0].kwh
-
-
-def _today_cost(data: PinergyData) -> float | None:
-    """Return today's cost, or None when the meter data is unavailable."""
-    if not data.usage.day or not data.usage.day[0].available:
-        return None
-    return data.usage.day[0].amount
+def _today_available(data: PinergyData) -> bool:
+    """Return True when today's meter data has been reported."""
+    return bool(data.usage.day) and data.usage.day[0].available
 
 
 SENSORS: tuple[PinergySensorEntityDescription, ...] = (
@@ -57,7 +51,6 @@ SENSORS: tuple[PinergySensorEntityDescription, ...] = (
         translation_key="days_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
-        icon="mdi:calendar-clock",
         value_fn=lambda data: data.balance.top_up_in_days,
     ),
     PinergySensorEntityDescription(
@@ -76,7 +69,8 @@ SENSORS: tuple[PinergySensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        value_fn=_today_usage_kwh,
+        value_fn=lambda data: data.usage.day[0].kwh,
+        available_fn=_today_available,
     ),
     PinergySensorEntityDescription(
         key="today_cost",
@@ -85,7 +79,8 @@ SENSORS: tuple[PinergySensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         suggested_display_precision=2,
-        value_fn=_today_cost,
+        value_fn=lambda data: data.usage.day[0].amount,
+        available_fn=_today_available,
     ),
 )
 
@@ -107,13 +102,13 @@ class PinergySensor(PinergyEntity, SensorEntity):
 
     entity_description: PinergySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PinergyDataUpdateCoordinator,
-        description: PinergySensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description)
+    @property
+    def available(self) -> bool:
+        """Return True if the coordinator and this sensor's data are available."""
+        if not super().available:
+            return False
+        available_fn = self.entity_description.available_fn
+        return available_fn is None or available_fn(self.coordinator.data)
 
     @property
     def native_value(self) -> StateType:

@@ -12,6 +12,7 @@ from pypinergy import (
     PinergyAuthError,
     PinergyClient,
     PinergyHTTPError,
+    PinergyTimeoutError,
     UsageResponse,
 )
 
@@ -74,6 +75,8 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
             )
         except PinergyAuthError as err:
             raise ConfigEntryAuthFailed(f"Invalid credentials: {err}") from err
+        except PinergyTimeoutError as err:
+            raise UpdateFailed(f"Timeout connecting to the Pinergy API: {err}") from err
         except (PinergyAPIError, PinergyHTTPError) as err:
             raise UpdateFailed(f"Error connecting to the Pinergy API: {err}") from err
 
@@ -97,6 +100,8 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
         """Fetch the latest data from the Pinergy API."""
         try:
             return await self.hass.async_add_executor_job(self._fetch)
+        except PinergyTimeoutError as err:
+            raise UpdateFailed(f"Timeout connecting to the Pinergy API: {err}") from err
         except (PinergyAuthError, PinergyAPIError) as err:
             if isinstance(err, PinergyAPIError) and not _is_token_error(err):
                 raise UpdateFailed(
@@ -110,6 +115,10 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
             except PinergyAuthError as relogin_err:
                 raise ConfigEntryAuthFailed(
                     f"Invalid credentials: {relogin_err}"
+                ) from relogin_err
+            except PinergyTimeoutError as relogin_err:
+                raise UpdateFailed(
+                    f"Timeout connecting to the Pinergy API: {relogin_err}"
                 ) from relogin_err
             except (PinergyAPIError, PinergyHTTPError) as relogin_err:
                 raise UpdateFailed(

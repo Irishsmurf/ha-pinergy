@@ -14,8 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PinergyConfigEntry
-from .coordinator import PinergyData, PinergyDataUpdateCoordinator
+from .coordinator import PinergyData
 from .entity import PinergyEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -23,6 +25,7 @@ class PinergyBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Pinergy binary sensor entity."""
 
     is_on_fn: Callable[[PinergyData], bool]
+    available_fn: Callable[[PinergyData], bool] | None = None
 
 
 BINARY_SENSORS: tuple[PinergyBinarySensorEntityDescription, ...] = (
@@ -66,13 +69,13 @@ class PinergyBinarySensor(PinergyEntity, BinarySensorEntity):
 
     entity_description: PinergyBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PinergyDataUpdateCoordinator,
-        description: PinergyBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator, description)
+    @property
+    def available(self) -> bool:
+        """Return True if the coordinator and this sensor's data are available."""
+        if not super().available:
+            return False
+        available_fn = self.entity_description.available_fn
+        return available_fn is None or available_fn(self.coordinator.data)
 
     @property
     def is_on(self) -> bool:

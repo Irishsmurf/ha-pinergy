@@ -6,7 +6,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from pypinergy import PinergyAPIError, PinergyAuthError, PinergyHTTPError
+from pypinergy import (
+    PinergyAPIError,
+    PinergyAuthError,
+    PinergyHTTPError,
+    PinergyTimeoutError,
+)
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -14,11 +19,17 @@ from pytest_homeassistant_custom_component.common import (
 
 from custom_components.pinergy.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import build_balance_response
+from .conftest import build_balance_response, build_usage_response
 
 TEST_USER_INPUT = {
     CONF_EMAIL: "user@example.com",
@@ -81,6 +92,7 @@ async def test_unload_entry(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+    mock_pinergy_client.close.assert_called_once()
 
 
 async def test_setup_auth_error_starts_reauth(
@@ -101,11 +113,17 @@ async def test_setup_auth_error_starts_reauth(
     assert flows[0]["context"]["source"] == "reauth"
 
 
+@pytest.mark.parametrize(
+    "connection_error",
+    [PinergyHTTPError("server error"), PinergyTimeoutError("timed out")],
+)
 async def test_setup_connection_error_retries(
-    hass: HomeAssistant, mock_pinergy_client: MagicMock
+    hass: HomeAssistant,
+    mock_pinergy_client: MagicMock,
+    connection_error: Exception,
 ) -> None:
     """Test that a network error during setup leaves the entry in retry state."""
-    mock_pinergy_client.login.side_effect = PinergyHTTPError("timeout")
+    mock_pinergy_client.login.side_effect = connection_error
 
     entry = _make_entry()
     entry.add_to_hass(hass)
@@ -198,3 +216,29 @@ async def test_refresh_non_auth_api_error_does_not_relogin(
     assert mock_pinergy_client.login.call_count == 1
     state = hass.states.get("sensor.pinergy_account_current_balance")
     assert state.state == "unavailable"
+
+
+async def test_today_sensors_unavailable_without_meter_data(
+    hass: HomeAssistant, mock_pinergy_client: MagicMock
+) -> None:
+    """Test that today's sensors are unavailable when the meter has no data yet."""
+    mock_pinergy_client.get_usage.return_value = build_usage_response(
+        today_available=False
+    )
+
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.pinergy_account_today_s_usage").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.pinergy_account_today_s_cost").state
+        == STATE_UNAVAILABLE
+    )
+    # Balance-backed sensors are unaffected.
+    assert hass.states.get("sensor.pinergy_account_current_balance").state == "23.45"
