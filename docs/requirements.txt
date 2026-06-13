@@ -1,4 +1,4 @@
 # Documentation site dependencies — install with:
 #   pip install -r docs/requirements.txt
 # then preview with `mkdocs serve`.
-mkdocs-material>=9.5
+mkdocs-material>=9.7.6
