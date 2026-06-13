@@ -71,17 +71,16 @@ refresh (so they never re-fire historical data on restart).
 ### Example automation
 
 ```yaml
-automation:
-  - alias: "Notify on Pinergy top-up"
-    triggers:
-      - trigger: state
-        entity_id: event.pinergy_account_top_up
-    actions:
-      - action: notify.notify
-        data:
-          title: "Pinergy top-up received"
-          message: >-
-            A top-up of €{{ trigger.to_state.attributes.amount }} was applied.
+- alias: "Notify on Pinergy top-up"
+  triggers:
+    - trigger: state
+      entity_id: event.pinergy_account_top_up
+  actions:
+    - action: notify.notify
+      data:
+        title: "Pinergy top-up received"
+        message: >-
+          A top-up of €{{ trigger.to_state.attributes.amount }} was applied.
 ```
 
 ## Naming and entity IDs
