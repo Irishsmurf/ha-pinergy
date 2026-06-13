@@ -1,2 +1,2 @@
 pytest-homeassistant-custom-component>=0.13.205
-pypinergy==0.1.6
+pypinergy==1.0.0
