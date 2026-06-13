@@ -11,3 +11,6 @@ venv/
 *.egg-info/
 .DS_Store
 .plans/
+
+# MkDocs build output
+site/

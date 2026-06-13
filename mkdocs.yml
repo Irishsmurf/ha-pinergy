@@ -1,0 +1,91 @@
+site_name: Pinergy for Home Assistant
+site_description: >-
+  Unofficial Home Assistant integration for Pinergy, the Irish prepay energy
+  provider. Monitor your credit balance, usage, and meter status.
+site_url: https://irishsmurf.github.io/ha-pinergy/
+repo_url: https://github.com/Irishsmurf/ha-pinergy
+repo_name: Irishsmurf/ha-pinergy
+edit_uri: edit/main/docs/
+copyright: >-
+  Unofficial community project &mdash; not affiliated with or endorsed by Pinergy.
+
+theme:
+  name: material
+  logo: assets/brand/icon.svg
+  favicon: assets/brand/icon.png
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+    - search.suggest
+    - search.highlight
+  palette:
+    # Light mode — Pinergy halo indigo
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+extra_css:
+  - stylesheets/brand.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Irishsmurf/ha-pinergy
+    - icon: simple/homeassistant
+      link: https://www.home-assistant.io/
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+  - User guide:
+      - Entities: user-guide/entities.md
+      - Energy Dashboard: user-guide/energy-dashboard.md
+      - Options: user-guide/options.md
+      - Troubleshooting: user-guide/troubleshooting.md
+  - Architecture:
+      - Overview: architecture/index.md
+      - Data updates & auth: architecture/data-updates.md
+      - Long-term statistics: architecture/statistics.md
+  - Contributing: contributing.md
+  - Branding: branding.md

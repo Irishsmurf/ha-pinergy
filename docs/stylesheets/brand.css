@@ -1,0 +1,40 @@
+/* Pinergy brand palette — derived from the halo mark gradient:
+   indigo #2E3192 → magenta #93278F → red #E1242D, wordmark #A4161D. */
+
+:root {
+  --md-primary-fg-color: #2E3192;
+  --md-primary-fg-color--light: #4347b8;
+  --md-primary-fg-color--dark: #20226b;
+  --md-accent-fg-color: #93278F;
+  --md-accent-fg-color--transparent: rgba(147, 39, 143, 0.1);
+}
+
+/* Slate (dark) scheme — lift the primary so it stays legible on dark chrome. */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #6f73d6;
+  --md-primary-fg-color--light: #8e91e0;
+  --md-primary-fg-color--dark: #4347b8;
+  --md-accent-fg-color: #c45cbf;
+  --md-typeset-a-color: #8e91e0;
+}
+
+/* Gradient underline on the homepage hero, echoing the halo. */
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+.pinergy-hero {
+  text-align: center;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.pinergy-hero img {
+  max-width: 360px;
+  width: 100%;
+}
+
+.pinergy-tagline {
+  font-size: 1.1rem;
+  opacity: 0.8;
+  margin-top: 0.5rem;
+}
