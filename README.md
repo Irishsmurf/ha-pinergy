@@ -1,100 +1,91 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/brand/dark_logo.png">
-    <img src="assets/brand/logo.png" alt="Pinergy" width="320">
+    <img src="assets/brand/logo.png" alt="Pinergy for Home Assistant" width="360">
   </picture>
 </p>
 
 <h1 align="center">Pinergy for Home Assistant</h1>
 
-A custom [Home Assistant](https://www.home-assistant.io/) integration for [Pinergy](https://www.pinergy.ie/), the Irish prepay energy provider. It polls the Pinergy smart-meter API (via [pypinergy](https://pypi.org/project/pypinergy/)) every 30 minutes and exposes your credit balance, usage, and meter status as entities.
+<p align="center">
+  Monitor your <a href="https://www.pinergy.ie/">Pinergy</a> prepay electricity account &mdash; balance, usage, and meter status &mdash; from <a href="https://www.home-assistant.io/">Home Assistant</a>.
+</p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/Irishsmurf/ha-pinergy/releases"><img src="https://img.shields.io/github/v/release/Irishsmurf/ha-pinergy?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/Irishsmurf/ha-pinergy/actions/workflows/validate.yml"><img src="https://img.shields.io/github/actions/workflow/status/Irishsmurf/ha-pinergy/validate.yml?style=flat-square&label=validate" alt="Validate"></a>
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?style=flat-square" alt="HACS Custom"></a>
+  <a href="https://irishsmurf.github.io/ha-pinergy/"><img src="https://img.shields.io/badge/docs-mkdocs-526CFE?style=flat-square" alt="Documentation"></a>
+</p>
 
-All entities belong to a single **Pinergy Account** device.
+---
 
-### Sensors
+Pinergy is an Irish prepay energy provider. This custom integration polls the Pinergy smart-meter API (via [`pypinergy`](https://pypi.org/project/pypinergy/)) every 30 minutes and surfaces your **credit balance**, **energy usage**, and **meter status** as native Home Assistant entities &mdash; ready for dashboards, automations, and the [Energy Dashboard](https://www.home-assistant.io/home-energy-management/).
 
-| Entity | Description | Unit |
-|---|---|---|
-| Current balance | Current credit balance | € |
-| Days remaining | Estimated days until credit runs out | days |
-| Last top-up amount | Amount of the most recent top-up | € |
-| Today's usage | Energy consumed so far today | kWh |
-| Today's cost | Cost of today's usage | € |
-| This week's usage | Energy consumed so far this week | kWh |
-| This week's cost | Cost of this week's usage | € |
-| This month's usage | Energy consumed so far this month | kWh |
-| This month's cost | Cost of this month's usage | € |
-| Last meter reading | When the meter last reported | timestamp |
-| Last top-up | When the most recent top-up was made (disabled by default) | timestamp |
-| Average home usage today | What a similar home used today (disabled by default) | kWh |
-| Average home cost today | What a similar home spent today (disabled by default) | € |
+> [!NOTE]
+> This is an unofficial integration and is not affiliated with or endorsed by Pinergy.
 
-Entities marked *disabled by default* can be enabled from the Pinergy Account device page.
+## ✨ Highlights
 
-### Binary sensors
+- **Credit balance & runway** &mdash; current balance, estimated days remaining, and last top-up amount.
+- **Usage & cost** &mdash; energy and spend for today, this week, and this month.
+- **Meter status** &mdash; power, emergency credit, low-credit, and pending top-up binary sensors.
+- **Events** &mdash; fire automations the moment a top-up lands or the meter reports a new reading.
+- **Energy Dashboard ready** &mdash; daily history is backfilled into long-term statistics, so it stays accurate even across Home Assistant downtime.
+- **Configurable** &mdash; tune the polling interval and toggle "average home" comparisons from the options flow.
 
-| Entity | Description |
-|---|---|
-| Power | Off when the supply has been disconnected |
-| Emergency credit | On when the meter is drawing on emergency credit |
-| Credit low | On when the balance is below your alert threshold |
-| Pending top-up | On while a top-up is waiting to be applied to the meter |
+## 🚀 Quick start
 
-## Energy Dashboard
-
-The integration imports your daily usage history into Home Assistant's long-term statistics on every refresh, so the [Energy Dashboard](https://www.home-assistant.io/home-energy-management/) stays accurate even across Home Assistant downtime.
-
-1. Go to **Settings → Dashboards → Energy**.
-2. Under **Electricity grid → Add consumption**, select the **Pinergy energy consumption** statistic.
-3. For cost tracking, choose **Use an entity tracking the total costs** and select **Pinergy energy cost**.
-
-Alternatively, the **Today's usage** and **Today's cost** sensors can be used directly, but the imported statistics are recommended: they backfill the last seven days from the Pinergy API rather than relying on Home Assistant having been online.
-
-## Installation
-
-### HACS (recommended)
+### Install with HACS (recommended)
 
 1. In HACS, open **⋮ → Custom repositories**.
 2. Add `https://github.com/Irishsmurf/ha-pinergy` with category **Integration**.
 3. Search for **Pinergy** in HACS and download it.
 4. Restart Home Assistant.
 
-### Manual
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Irishsmurf&repository=ha-pinergy&category=integration)
 
-1. Copy `custom_components/pinergy/` into the `custom_components/` folder of your Home Assistant configuration directory.
-2. Restart Home Assistant.
-
-## Configuration
+### Configure
 
 1. Go to **Settings → Devices & Services → Add Integration**.
-2. Search for **Pinergy**.
-3. Enter the email address and password you use for the Pinergy app.
+2. Search for **Pinergy** and select it.
+3. Enter the email and password you use for the Pinergy app.
 
 No `configuration.yaml` setup is required or supported.
 
-If your password changes, Home Assistant will prompt you to re-authenticate.
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pinergy)
 
-## Development
+## 📚 Documentation
+
+Full documentation lives at **[irishsmurf.github.io/ha-pinergy](https://irishsmurf.github.io/ha-pinergy/)**:
+
+| Guide | What's inside |
+|---|---|
+| [Installation](https://irishsmurf.github.io/ha-pinergy/getting-started/installation/) | HACS and manual install, requirements |
+| [Configuration](https://irishsmurf.github.io/ha-pinergy/getting-started/configuration/) | Adding the integration, re-authentication |
+| [Entities](https://irishsmurf.github.io/ha-pinergy/user-guide/entities/) | Every sensor, binary sensor, and event explained |
+| [Energy Dashboard](https://irishsmurf.github.io/ha-pinergy/user-guide/energy-dashboard/) | Wiring up long-term statistics |
+| [Options](https://irishsmurf.github.io/ha-pinergy/user-guide/options/) | Polling interval and comparison toggles |
+| [Troubleshooting](https://irishsmurf.github.io/ha-pinergy/user-guide/troubleshooting/) | Common issues and diagnostics |
+| [Architecture](https://irishsmurf.github.io/ha-pinergy/architecture/) | How the integration is built |
+| [Contributing](https://irishsmurf.github.io/ha-pinergy/contributing/) | Dev setup, tests, releases |
+
+To preview the docs locally:
+
+```bash
+pip install -r docs/requirements.txt
+mkdocs serve
+```
+
+## 🛠️ Development
 
 ```bash
 pip install -r requirements_test.txt
 pytest
 ```
 
-## Branding
+See the [Contributing guide](https://irishsmurf.github.io/ha-pinergy/contributing/) for the full workflow, coding conventions, and release process.
 
-The integration ships with brand assets under [`custom_components/pinergy/brand/`](custom_components/pinergy/brand/), mirrored in [`assets/brand/`](assets/brand/) for documentation use.
+## ⚠️ Disclaimer
 
-| Asset | Preview | Usage |
-|---|---|---|
-| Icon | <img src="assets/brand/icon.png" alt="Pinergy icon" width="64"> | Square mark shown for the integration in Home Assistant |
-| Logo | <img src="assets/brand/logo.png" alt="Pinergy logo" width="160"> | Full logo for light backgrounds |
-| Dark logo | <img src="assets/brand/dark_logo.png" alt="Pinergy dark logo" width="160"> | Full logo for dark backgrounds |
-
-Each asset is provided as `.svg`, `.png`, and `@2x.png` (high-DPI) variants.
-
-## Disclaimer
-
-This is an unofficial integration and is not affiliated with or endorsed by Pinergy.
+This is an unofficial, community-built integration. It is not affiliated with, endorsed by, or supported by Pinergy. "Pinergy" and related marks belong to their respective owners; the bundled brand assets are an unofficial lockup created for this project.
