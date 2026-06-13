@@ -1,4 +1,11 @@
-# <img src="assets/brand/icon.png" alt="Pinergy" width="28"> Pinergy for Home Assistant
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/dark_logo.png">
+    <img src="assets/brand/logo.png" alt="Pinergy" width="320">
+  </picture>
+</p>
+
+<h1 align="center">Pinergy for Home Assistant</h1>
 
 A custom [Home Assistant](https://www.home-assistant.io/) integration for [Pinergy](https://www.pinergy.ie/), the Irish prepay energy provider. It polls the Pinergy smart-meter API (via [pypinergy](https://pypi.org/project/pypinergy/)) every 30 minutes and exposes your credit balance, usage, and meter status as entities.
 
@@ -75,6 +82,18 @@ If your password changes, Home Assistant will prompt you to re-authenticate.
 pip install -r requirements_test.txt
 pytest
 ```
+
+## Branding
+
+The integration ships with brand assets under [`custom_components/pinergy/brand/`](custom_components/pinergy/brand/), mirrored in [`assets/brand/`](assets/brand/) for documentation use.
+
+| Asset | Preview | Usage |
+|---|---|---|
+| Icon | <img src="assets/brand/icon.png" alt="Pinergy icon" width="64"> | Square mark shown for the integration in Home Assistant |
+| Logo | <img src="assets/brand/logo.png" alt="Pinergy logo" width="160"> | Full logo for light backgrounds |
+| Dark logo | <img src="assets/brand/dark_logo.png" alt="Pinergy dark logo" width="160"> | Full logo for dark backgrounds |
+
+Each asset is provided as `.svg`, `.png`, and `@2x.png` (high-DPI) variants.
 
 ## Disclaimer
 
