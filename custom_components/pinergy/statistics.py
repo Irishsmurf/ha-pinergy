@@ -15,7 +15,11 @@ from datetime import datetime
 from pypinergy import UsageEntry, UsageResponse
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -40,6 +44,7 @@ def _metadata(statistic_id: str, name: str, unit: str) -> StatisticMetaData:
     return StatisticMetaData(
         has_mean=False,
         has_sum=True,
+        mean_type=StatisticMeanType.NONE,
         name=f"Pinergy {name}",
         source=DOMAIN,
         statistic_id=statistic_id,
