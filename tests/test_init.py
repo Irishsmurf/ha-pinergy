@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -322,6 +322,7 @@ async def test_compare_endpoint_failure_is_tolerated(
         == STATE_UNAVAILABLE
     )
 
+
 async def test_options_reload_entry(
     hass: HomeAssistant, mock_pinergy_client: MagicMock
 ) -> None:
@@ -341,3 +342,45 @@ async def test_options_reload_entry(
         )
         await hass.async_block_till_done()
         assert mock_setup.call_count == 1
+
+
+async def test_custom_scan_interval_is_applied(
+    hass: HomeAssistant, mock_pinergy_client: MagicMock
+) -> None:
+    """Test that a custom scan_interval option sets coordinator.update_interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="PN123456",
+        title=TEST_USER_INPUT[CONF_EMAIL],
+        data=TEST_USER_INPUT,
+        options={"scan_interval": 15},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+    coordinator = entry.runtime_data
+    assert coordinator.update_interval == timedelta(minutes=15)
+
+
+async def test_scan_interval_changes_on_options_update(
+    hass: HomeAssistant, mock_pinergy_client: MagicMock
+) -> None:
+    """Test that changing scan_interval reloads the entry with the new interval."""
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+    coordinator_before = entry.runtime_data
+    assert coordinator_before.update_interval == timedelta(minutes=30)
+
+    hass.config_entries.async_update_entry(entry, options={"scan_interval": 60})
+    await hass.async_block_till_done()
+
+    coordinator_after = entry.runtime_data
+    assert coordinator_after.update_interval == timedelta(minutes=60)
