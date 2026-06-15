@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -60,6 +61,25 @@ class PinergyEventEntity(PinergyEntity, EventEntity):
 
     entity_description: PinergyEventEntityDescription
     _last_seen_ts: int | float | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last-seen timestamp from the recorder on startup.
+
+        Without this, any event that occurred while HA was offline would be
+        silently dropped because _last_seen_ts would initialise to None and
+        the first _handle_coordinator_update would set it without firing.
+        """
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            with contextlib.suppress(KeyError, TypeError, ValueError):
+                stored = last_state.attributes.get("last_seen_ts")
+                if stored is not None:
+                    self._last_seen_ts = float(stored)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose last_seen_ts so HA persists it and we can restore it."""
+        return {"last_seen_ts": self._last_seen_ts}
 
     @callback
     def _handle_coordinator_update(self) -> None:
