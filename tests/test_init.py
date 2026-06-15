@@ -375,9 +375,8 @@ async def test_scan_interval_changes_on_options_update(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-
     coordinator_before = entry.runtime_data
-    assert coordinator_before.update_interval == timedelta(minutes=30)
+    assert coordinator_before.update_interval == DEFAULT_SCAN_INTERVAL
 
     hass.config_entries.async_update_entry(entry, options={"scan_interval": 60})
     await hass.async_block_till_done()
