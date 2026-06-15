@@ -360,7 +360,6 @@ async def test_custom_scan_interval_is_applied(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-
     coordinator = entry.runtime_data
     assert coordinator.update_interval == timedelta(minutes=15)
 
