@@ -147,8 +147,35 @@ def test_metadata_builds_without_mean_type_on_older_ha() -> None:
     """
     from custom_components.pinergy.statistics import _metadata
 
-    meta = _metadata("pinergy:premises_consumption", "Consumption", "kWh")
+    meta = _metadata("pinergy:premises_consumption", "Consumption", "kWh", "energy")
 
     assert meta["statistic_id"] == "pinergy:premises_consumption"
     assert meta["has_sum"] is True
     assert meta["unit_of_measurement"] == "kWh"
+
+
+def test_metadata_specifies_unit_class() -> None:
+    """_metadata must specify unit_class where HA supports it (from 2026.11).
+
+    Omitting it logs a deprecation warning and stops working in HA 2026.11.
+    Energy series carry the ``energy`` unit class; monetary series have no
+    converter, so the key is present but ``None``. Older HA rejects the unknown
+    key, so it is only emitted when ``_SUPPORTS_UNIT_CLASS``.
+    """
+    from unittest.mock import patch
+
+    from custom_components.pinergy.statistics import _metadata
+
+    module = "custom_components.pinergy.statistics._SUPPORTS_UNIT_CLASS"
+
+    with patch(module, True):
+        energy = _metadata("pinergy:c", "Consumption", "kWh", "energy")
+        cost = _metadata("pinergy:m", "Cost", "EUR", None)
+        assert energy["unit_class"] == "energy"
+        assert cost["unit_class"] is None
+
+    with patch(module, False):
+        energy = _metadata("pinergy:c", "Consumption", "kWh", "energy")
+        cost = _metadata("pinergy:m", "Cost", "EUR", None)
+        assert "unit_class" not in energy
+        assert "unit_class" not in cost
