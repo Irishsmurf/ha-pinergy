@@ -68,6 +68,9 @@ class PinergyEventEntity(PinergyEntity, EventEntity):
         Without this, any event that occurred while HA was offline would be
         silently dropped because _last_seen_ts would initialise to None and
         the first _handle_coordinator_update would set it without firing.
+
+        EventEntity already inherits RestoreEntity, so async_get_last_state is
+        available here without adding it to the base classes.
         """
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_state()) is not None:
@@ -75,6 +78,13 @@ class PinergyEventEntity(PinergyEntity, EventEntity):
                 stored = last_state.attributes.get("last_seen_ts")
                 if stored is not None:
                     self._last_seen_ts = float(stored)
+
+        # The coordinator's first refresh runs before the entity is added, so
+        # its update is never delivered here. Evaluate the already-available
+        # data now so a top-up missed during downtime fires immediately on
+        # startup rather than waiting for the next poll.
+        if self.coordinator.data is not None:
+            self._handle_coordinator_update()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -66,7 +66,6 @@ async def test_top_up_event_triggers(
     events = async_capture_events(hass, "state_changed")
 
     coordinator = entry.runtime_data
-    entity = hass.data["entity_registry"].async_get("event.pinergy_account_top_up")
 
     # We must retrieve the actual entity instance from hass.data
     # This is slightly brittle but needed since we're bypassing normal poll logic
@@ -84,8 +83,15 @@ async def test_top_up_event_triggers(
     entity_instance._handle_coordinator_update()
     await hass.async_block_till_done()
 
-    # Find the state_changed event for our entity
-    event = next(e for e in events if e.data["entity_id"] == entity_id)
+    # Find the state_changed event where the top-up actually fired. Exposing
+    # last_seen_ts via extra_state_attributes means the baseline update also
+    # emits a state_changed (event_type=None), so filter for the real event.
+    event = next(
+        e
+        for e in events
+        if e.data["entity_id"] == entity_id
+        and e.data["new_state"].attributes.get("event_type") == "top_up_received"
+    )
     assert event.data["new_state"].attributes["event_type"] == "top_up_received"
     assert event.data["new_state"].attributes["amount"] == 50.0
 
@@ -111,8 +117,14 @@ async def test_meter_reading_event_triggers(
     entity_instance._handle_coordinator_update()
     await hass.async_block_till_done()
 
-    # Find the state_changed event for our entity
-    event = next(e for e in events if e.data["entity_id"] == entity_id)
+    # Filter for the state_changed where the meter reading actually fired; the
+    # baseline update also emits a state_changed (event_type=None).
+    event = next(
+        e
+        for e in events
+        if e.data["entity_id"] == entity_id
+        and e.data["new_state"].attributes.get("event_type") == "new_meter_reading"
+    )
     assert event.data["new_state"].attributes["event_type"] == "new_meter_reading"
 
 
