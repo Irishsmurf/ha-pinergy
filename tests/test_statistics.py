@@ -162,14 +162,20 @@ def test_metadata_specifies_unit_class() -> None:
     converter, so the key is present but ``None``. Older HA rejects the unknown
     key, so it is only emitted when ``_SUPPORTS_UNIT_CLASS``.
     """
-    from custom_components.pinergy.statistics import _SUPPORTS_UNIT_CLASS, _metadata
+    from unittest.mock import patch
 
-    energy = _metadata("pinergy:premises_consumption", "Consumption", "kWh", "energy")
-    cost = _metadata("pinergy:premises_cost", "Cost", "EUR", None)
+    from custom_components.pinergy.statistics import _metadata
 
-    if _SUPPORTS_UNIT_CLASS:
+    module = "custom_components.pinergy.statistics._SUPPORTS_UNIT_CLASS"
+
+    with patch(module, True):
+        energy = _metadata("pinergy:c", "Consumption", "kWh", "energy")
+        cost = _metadata("pinergy:m", "Cost", "EUR", None)
         assert energy["unit_class"] == "energy"
         assert cost["unit_class"] is None
-    else:
+
+    with patch(module, False):
+        energy = _metadata("pinergy:c", "Consumption", "kWh", "energy")
+        cost = _metadata("pinergy:m", "Cost", "EUR", None)
         assert "unit_class" not in energy
         assert "unit_class" not in cost
