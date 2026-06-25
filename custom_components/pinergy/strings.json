@@ -103,6 +103,11 @@
         "name": "Pending top-up"
       }
     },
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    },
     "event": {
       "top_up": {
         "name": "Top-up",

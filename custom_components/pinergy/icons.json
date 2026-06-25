@@ -15,6 +15,11 @@
       "pending_top_up": {
         "default": "mdi:cash-clock"
       }
+    },
+    "button": {
+      "refresh": {
+        "default": "mdi:refresh"
+      }
     }
   }
 }

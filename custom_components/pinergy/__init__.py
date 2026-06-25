@@ -10,7 +10,12 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PinergyDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.EVENT,
+    Platform.SENSOR,
+]
 
 type PinergyConfigEntry = ConfigEntry[PinergyDataUpdateCoordinator]
 
