@@ -17,9 +17,17 @@ from pypinergy import UsageEntry, UsageResponse
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
-    StatisticMeanType,
     StatisticMetaData,
 )
+
+try:
+    # ``mean_type`` superseded ``has_mean`` in HA 2026.11; the enum is absent on
+    # older HA (the integration targets 2025.1+), so fall back to ``has_mean``.
+    from homeassistant.components.recorder.models import StatisticMeanType
+
+    _MEAN_TYPE_KWARGS = {"mean_type": StatisticMeanType.NONE}
+except ImportError:  # pragma: no cover - exercised only on older HA
+    _MEAN_TYPE_KWARGS = {"has_mean": False}
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -42,13 +50,12 @@ def _statistic_id(premises_number: str, suffix: str) -> str:
 def _metadata(statistic_id: str, name: str, unit: str) -> StatisticMetaData:
     """Build the metadata for one external statistic series."""
     return StatisticMetaData(
-        has_mean=False,
         has_sum=True,
-        mean_type=StatisticMeanType.NONE,
         name=f"Pinergy {name}",
         source=DOMAIN,
         statistic_id=statistic_id,
         unit_of_measurement=unit,
+        **_MEAN_TYPE_KWARGS,
     )
 
 

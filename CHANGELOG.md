@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-06-25
+
 ### Fixed
-- Specify `mean_type` when calling `async_add_external_statistics` to resolve Home Assistant 2026.11 deprecation warning.
+- Specify `mean_type` in statistics metadata to resolve the Home Assistant 2026.11 `has_mean` deprecation warning, guarded so the integration still imports on older HA (2025.1+) that lack `StatisticMeanType`.
 
 ## [0.2.1] - 2026-06-12
 

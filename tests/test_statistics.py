@@ -137,3 +137,18 @@ async def test_statistics_skip_unavailable_days(
     consumption = stats[CONSUMPTION_ID]
     assert len(consumption) == 1
     assert consumption[0]["start"] == YESTERDAY_TS
+
+
+def test_metadata_builds_without_mean_type_on_older_ha() -> None:
+    """_metadata must build valid StatisticMetaData regardless of HA version.
+
+    Older HA (pre-StatisticMeanType) lacks the ``mean_type`` field; the module
+    must not unconditionally depend on it or it fails to import/build.
+    """
+    from custom_components.pinergy.statistics import _metadata
+
+    meta = _metadata("pinergy:premises_consumption", "Consumption", "kWh")
+
+    assert meta["statistic_id"] == "pinergy:premises_consumption"
+    assert meta["has_sum"] is True
+    assert meta["unit_of_measurement"] == "kWh"
