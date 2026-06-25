@@ -40,6 +40,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# ``unit_class`` became a required ``StatisticMetaData`` field in HA 2026.11
+# (omitting it logs a deprecation warning); older HA rejects the unknown key
+# when persisting the ORM row, so only emit it where the field is supported.
+_SUPPORTS_UNIT_CLASS = "unit_class" in StatisticMetaData.__annotations__
+
 
 def _statistic_id(premises_number: str, suffix: str) -> str:
     """Build a valid external statistic id for this premises."""
@@ -47,14 +52,24 @@ def _statistic_id(premises_number: str, suffix: str) -> str:
     return f"{DOMAIN}:{slug}_{suffix}"
 
 
-def _metadata(statistic_id: str, name: str, unit: str) -> StatisticMetaData:
-    """Build the metadata for one external statistic series."""
+def _metadata(
+    statistic_id: str, name: str, unit: str, unit_class: str | None
+) -> StatisticMetaData:
+    """Build the metadata for one external statistic series.
+
+    ``unit_class`` is required from HA 2026.11 (omitting it logs a deprecation
+    warning); energy series carry the ``energy`` unit class, monetary series
+    have no converter so it is ``None``. Older HA rejects the unknown key, so it
+    is only emitted where supported (see ``_SUPPORTS_UNIT_CLASS``).
+    """
+    unit_class_kwargs = {"unit_class": unit_class} if _SUPPORTS_UNIT_CLASS else {}
     return StatisticMetaData(
         has_sum=True,
         name=f"Pinergy {name}",
         source=DOMAIN,
         statistic_id=statistic_id,
         unit_of_measurement=unit,
+        **unit_class_kwargs,
         **_MEAN_TYPE_KWARGS,
     )
 
@@ -115,9 +130,14 @@ async def async_insert_statistics(
 
     async_add_external_statistics(
         hass,
-        _metadata(consumption_id, "energy consumption", UnitOfEnergy.KILO_WATT_HOUR),
+        _metadata(
+            consumption_id,
+            "energy consumption",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            "energy",
+        ),
         consumption,
     )
     async_add_external_statistics(
-        hass, _metadata(cost_id, "energy cost", CURRENCY_EURO), cost
+        hass, _metadata(cost_id, "energy cost", CURRENCY_EURO, None), cost
     )

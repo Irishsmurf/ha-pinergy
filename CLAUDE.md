@@ -27,3 +27,9 @@ Use `/release` or `gh release create vX.Y.Z`. The Release workflow stamps `manif
 ## Tests
 
 Run with `pytest`. Fixtures in `tests/conftest.py` mock `PinergyClient` and build real `pypinergy` dataclasses (`build_login_response`, `build_balance_response`, `build_usage_response`) — extend those builders rather than creating ad-hoc mocks.
+
+### Local dev env
+
+`requirements_test.txt` pins `pytest-homeassistant-custom-component>=0.13.205`, whose modern Home Assistant requires **Python 3.13** — install it (e.g. `pyenv install 3.13.x`) and use a project `.venv`; older Python silently caps the plugin at a 0.12.x release that pulls an ancient HA. CI (`.github/workflows/validate.yml`) already runs Python 3.13 on `ubuntu-latest`.
+
+On Debian bullseye (and other OSes with system SQLite < 3.40.1) the HA recorder refuses to start. Work around it **locally only** by `pip install pysqlite3-binary` and adding a `.venv/.../site-packages/sitecustomize.py` that does `sys.modules["sqlite3"] = pysqlite3`. Keep this in the gitignored `.venv` — never commit it; CI runs a modern OS SQLite and needs no shim.
