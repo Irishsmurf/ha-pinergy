@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-06-25
+
+### Fixed
+- Specify `unit_class` in external statistics metadata to resolve the Home Assistant 2026.11 `async_add_external_statistics` deprecation warning, guarded so the integration still works on older HA (2025.1+) that lack the field.
+
 ## [1.1.0] - 2026-06-25
 
 ### Changed
