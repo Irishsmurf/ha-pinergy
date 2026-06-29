@@ -37,11 +37,9 @@
       "init": {
         "title": "Pinergy Options",
         "data": {
-          "scan_interval": "Update interval (minutes)",
           "fetch_comparisons": "Fetch average home comparisons"
         },
         "data_description": {
-          "scan_interval": "How often to poll the Pinergy API for new data.",
           "fetch_comparisons": "If disabled, the integration will not fetch 'average home' comparison data, reducing API calls."
         }
       }

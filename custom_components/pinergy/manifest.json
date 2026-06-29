@@ -4,11 +4,11 @@
   "codeowners": ["@Irishsmurf"],
   "config_flow": true,
   "dependencies": ["recorder"],
-  "documentation": "https://github.com/Irishsmurf/ha-pinergy",
+  "documentation": "https://www.home-assistant.io/integrations/pinergy",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/Irishsmurf/ha-pinergy/issues",
   "loggers": ["pypinergy"],
+  "quality_scale": "bronze",
   "requirements": ["pypinergy==1.2.0"],
   "version": "0.2.1"
 }
