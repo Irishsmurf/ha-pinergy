@@ -9,17 +9,21 @@ redaction, full test coverage).
 Once merged into [`home-assistant/core`](https://github.com/home-assistant/core) the integration
 becomes a *built-in* integration and is no longer a "custom component".
 
-## The one custom-component-only field: `manifest.json` → `version`
+## `manifest.json` edits to apply when copying into core
 
-Home Assistant **requires** a `version` key for integrations loaded from `custom_components/` (the
-loader blocks them otherwise), but **forbids** it for built-in integrations (hassfest rejects it).
-The same conflict applies to `issue_tracker` (core generates the link automatically — already removed
-here).
+Two fields differ between a `custom_components/` integration and a built-in one, because hassfest
+validates them differently depending on where the code lives. They are kept in their
+custom-component form here so this repo loads and passes its own CI, and **must be changed when the
+code is copied into `homeassistant/components/pinergy/`**:
 
-So `version` is kept here only so the repo loads and its test suite runs. When copying into core,
-**delete the `version` line**. Everything else in `manifest.json` is already core-correct
-(`documentation` points at `https://www.home-assistant.io/integrations/pinergy`, `quality_scale` is
-`bronze`).
+1. **`version`** — required for `custom_components/` (the loader blocks integrations without it) but
+   **forbidden** for built-in integrations (hassfest rejects it). **Delete the `version` line.**
+2. **`documentation`** — for a custom integration hassfest requires it to point at the custom repo
+   (`https://github.com/Irishsmurf/ha-pinergy`); for core it must point at
+   **`https://www.home-assistant.io/integrations/pinergy`**. **Change the URL.**
+
+Everything else is already core-correct: `quality_scale` is `bronze`, and `issue_tracker` has been
+removed (core generates that link automatically).
 
 ## Steps to open the core submission
 
