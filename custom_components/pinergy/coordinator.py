@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pypinergy import (
     BalanceResponse,
@@ -18,20 +19,15 @@ from pypinergy import (
     UsageResponse,
 )
 
-from datetime import timedelta
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_FETCH_COMPARISONS,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL_MINUTES,
-    DOMAIN,
-)
+from .const import CONF_FETCH_COMPARISONS, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .statistics import async_insert_statistics
+
+if TYPE_CHECKING:
+    from . import PinergyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,13 +55,13 @@ class PinergyData:
 class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
     """Coordinator that polls the Pinergy API for balance and usage data."""
 
-    config_entry: ConfigEntry
+    config_entry: PinergyConfigEntry
     login_response: LoginResponse
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: PinergyConfigEntry,
         client: PinergyClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -74,11 +70,7 @@ class PinergyDataUpdateCoordinator(DataUpdateCoordinator[PinergyData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                minutes=config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
-                )
-            ),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.client = client
 

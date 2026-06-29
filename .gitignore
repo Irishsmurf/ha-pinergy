@@ -12,5 +12,8 @@ venv/
 .DS_Store
 .plans/
 
+# Local Claude Code config
+.claude/
+
 # MkDocs build output
 site/
